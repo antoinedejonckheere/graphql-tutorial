@@ -30,6 +30,10 @@ models.sequelize.sync({ force: true })
       name: 'dummy',
       description: 'even more dummy!'
     })
+    models.place.create({
+      name: 'erfeferfez',
+      description: 'this is a nightmare'
+    })
     console.log('Running a GraphQL API server at localhost:4000/graphql');
   })
   .catch(err => {
