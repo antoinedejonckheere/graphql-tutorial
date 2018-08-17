@@ -10,11 +10,6 @@ var {
 const models = require('./models/index')
 const defineSchema = require('./graphql/schemas')
 
-// Construct a schema, using GraphQL schema language
-
-// This class implements the RandomDie GraphQL type
-
-// The root provides the top-level API endpoints
 
 models.sequelize.sync({ force: true })
   .then(() => {
@@ -22,7 +17,6 @@ models.sequelize.sync({ force: true })
     const app = express();
     app.use('/graphql', graphqlHTTP({
       schema: defineSchema,
-      // rootValue: root,
       graphiql: true,
     }));
     app.listen(4000);
