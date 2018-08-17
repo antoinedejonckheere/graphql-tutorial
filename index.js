@@ -1,72 +1,37 @@
 var express = require('express');
+const Sequelize = require('sequelize')
 var graphqlHTTP = require('express-graphql');
-var { buildSchema } = require('graphql');
+var {
+  buildSchema,
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLString } = require('graphql');
+
+const models = require('./models/index')
+const defineSchema = require('./graphql/schemas')
 
 // Construct a schema, using GraphQL schema language
-var schema = buildSchema(`
-  type RandomDie {
-    numSides: Int!
-    rollOnce: Int!
-    roll(numRolls: Int!): [Int]
-  }
-
-  type RandomAnimal {
-    numLegs: Int!,
-    getAnimalName: String,
-  }
-
-  type Query {
-    getDie(numSides: Int): RandomDie,
-    getAnimal(numLegs: Int): RandomAnimal,
-  }
-`);
 
 // This class implements the RandomDie GraphQL type
-class RandomDie {
-  constructor(numSides) {
-    this.numSides = numSides;
-  }
-
-  rollOnce() {
-    return 1 + Math.floor(Math.random() * this.numSides);
-  }
-
-  roll({numRolls}) {
-    var output = [];
-    for (var i = 0; i < numRolls; i++) {
-      output.push(this.rollOnce());
-    }
-    return output;
-  }
-}
-
-class RandomAnimal {
-  constructor(numLegs) {
-    this.numLegs = numLegs
-  }
-  getAnimalName() {
-    if (this.numLegs === 2) {
-      return 'Human'
-    }
-    return 'Dog'
-  }
-}
 
 // The root provides the top-level API endpoints
-var root = {
-  getDie: function ({numSides}) {
-    return new RandomDie(numSides || 6);
-  },
-  getAnimal: function({ numLegs }) {
-    return new RandomAnimal(numLegs || 2)
-  }
-}
 
-var app = express();
-app.use('/graphql', graphqlHTTP({
-  schema: schema,
-  rootValue: root,
-  graphiql: true,
-}));
-app.listen(4000);
-console.log('Running a GraphQL API server at localhost:4000/graphql');
+models.sequelize.sync({ force: true })
+  .then(() => {
+    console.log('Connection has been established successfully.');
+    const app = express();
+    app.use('/graphql', graphqlHTTP({
+      schema: defineSchema,
+      // rootValue: root,
+      graphiql: true,
+    }));
+    app.listen(4000);
+    models.place.create({
+      name: 'dummy',
+      description: 'even more dummy!'
+    })
+    console.log('Running a GraphQL API server at localhost:4000/graphql');
+  })
+  .catch(err => {
+    console.error('Unable to connect to the database:', err);
+  });
